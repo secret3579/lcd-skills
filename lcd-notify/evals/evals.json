@@ -1,7 +1,0 @@
-[
-  {"prompt": "show 'Hello from Claude' on my screen"},
-  {"prompt": "ping my LCD when the build finishes"},
-  {"prompt": "notify my device that the deploy is complete"},
-  {"prompt": "send a green notification to my LCD saying tests passed"},
-  {"prompt": "let me know on the device when this is done"}
-]
