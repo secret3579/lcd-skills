@@ -1,24 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python3 -c ' *)",
-      "Bash(curl *)",
-      "Bash(python3 *)",
-      "Bash(mkdir -p ~/.config)",
-      "Bash(timeout 3 dns-sd -B _autonomous-lcd._tcp)",
-      "Bash(dns-sd -B _autonomous-lcd._tcp)",
-      "Bash(dns-sd -L *)",
-      "Bash(dns-sd -G *)",
-      "Bash(git init *)",
-      "Bash(git add *)",
-      "Bash(git commit *)",
-      "Bash(git remote *)",
-      "Bash(git branch *)",
-      "Bash(git push *)",
-      "Bash(git rm *)",
-      "Bash(chmod +x /Users/huynguyen/Downloads/cc-usage.sh)",
-      "Bash(/Users/huynguyen/Downloads/cc-usage.sh --raw)",
-      "Bash(git *)"
+      "Bash(*)"
     ]
   }
 }

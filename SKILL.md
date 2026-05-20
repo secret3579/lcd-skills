@@ -50,20 +50,27 @@ If `device_id` in response matches → update `last_seen_at`, done.
 
 ### 1.2 mDNS service browse
 
-```bash
-timeout 3 dns-sd -B _autonomous-lcd._tcp 2>&1
-```
-
-For each service found, resolve it:
+`dns-sd` on macOS runs interactively and never exits. Run it in background and kill after 3 seconds:
 
 ```bash
-timeout 3 dns-sd -L "<service-name>" _autonomous-lcd._tcp 2>&1
-timeout 3 dns-sd -G v4 <hostname> 2>&1
+dns-sd -B _autonomous-lcd._tcp &
+PID=$!
+sleep 3
+kill $PID 2>/dev/null
+wait $PID 2>/dev/null
 ```
 
-Match by `device_id` in TXT records. If found → update config, done.
+For each service found, resolve hostname then IP:
 
-**Note:** `dns-sd` on macOS runs interactively — always wrap with `timeout`.
+```bash
+dns-sd -L "<service-name>" _autonomous-lcd._tcp &
+PID=$!; sleep 3; kill $PID 2>/dev/null; wait $PID 2>/dev/null
+
+dns-sd -G v4 <hostname> &
+PID=$!; sleep 3; kill $PID 2>/dev/null; wait $PID 2>/dev/null
+```
+
+Match by `device_id` in TXT records. Parse IP from the `Add` line. If found → update config, done.
 
 ### 1.3 UDP probe sweep (fallback)
 
