@@ -57,10 +57,12 @@ note
 
 | Field   | Required | Type      | Description                                                                                 |
 | ------- | -------- | --------- | ------------------------------------------------------------------------------------------- |
-| `text`  | Yes      | string    | Content to display. Max 500 characters.                                                     |
-| `size`  | No       | int (1-4) | Font size. Default: 2.                                                                      |
-| `color` | No       | string    | Header bar color. Valid values: `red`, `green`, `blue`, `yellow`, `white`. Default: `blue`. |
-| `title` | No       | string    | Text shown in header bar. Default: none.                                                    |
+| `text`  | Yes (legacy mode) | string | Content to display. Max 500 chars. Required when rich layout not used. |
+| `size`  | No | int (1-4) | Font size. Default: 2. Also default size for text items in rich mode. |
+| `color` | No | string | Accent bar color (legacy) or default item color (rich). Default: `blue`. |
+| `title` | No | string | Parsed but not shown by current UI theme. |
+| `items` | Yes (rich mode) | array | List of items to render (max 6). See section 3.1.1. |
+| `play_sound` | No | int (0-20) | Play buzzer preset once when payload is accepted. |
 
 **Response:**
 
@@ -81,168 +83,214 @@ note
 
 ---
 
-### 3.1.1. Structured Layout Format
+### 3.1.1. Rich Layout Mode
 
-Instead of plain `text`, the client can send a `items` array for rich rendering with precise positioning.
+Instead of plain `text`, the client can send an `items[]` array for rich rendering with precise positioning.
 
-**Request:**
+If `items[]` contains at least one valid item, the firmware renders `items[]` and ignores the legacy `text` field.
+
+**Coordinate system:** The renderer draws inside an inner content area:
+- Origin: `(0, 0)` top-left of content area
+- Usable area: `220 x 117` pixels (not the full `240 x 135` screen)
+- Bottom-right usable point: `(219, 116)`
+
+**Limits:**
+- Maximum **6** items in `items[]` (extra items ignored)
+- Item `text` max length: **95** characters
+- `polygon.points` max string length: **95** characters
+- `play_sound`: preset index `0..20`
+- Colors: named (`red`, `green`, `blue`, `yellow`, `white`) or hex `#RRGGBB` (invalid falls back to `blue`)
+- `value`: clamped `0..100`, `radius`: clamped `0..50`, `stroke_width`: clamped `1..32`
+
+#### Common item fields
+
+| Field | Required | Type | Description |
+|-------|----------|------|-------------|
+| `type` | No | string | `text` | Unknown types treated as text if `text` present |
+| `color` | No | string | root `color` | Main item color |
+| `bg_color` | No | string | `#303030` | Background color (used by `progress`) |
+| `x` | No | int | `0` | X in 220x117 viewport |
+| `y` | No | int | `0` | Y in 220x117 viewport |
+| `width` | No | int | `0` | For text: 0 = remaining width. Clamped to 0..240 |
+| `height` | No | int | `0` | Clamped to 0..135 |
+| `stroke_width` | No | int | `1` | Clamped to 1..32 |
+| `filled` | No | bool | `true` | Fill-capable shapes |
+| `start_angle` | No | int | `0` | For `arc`, `ring`, `pie` |
+| `end_angle` | No | int | `360` | For `arc`, `ring`, `pie`. 360 = full shape |
+
+#### Item types
+
+**text** — Render text at position
+
+| Field | Required | Type | Description |
+|-------|----------|------|-------------|
+| `text` | Yes | string | Text content |
+| `size` | No | int (1-4) | Font size (1=small, 2=medium, 3=large, 4=extra large) |
+| `align` | No | string | `left`, `center`, `right` |
+| `width` | No | int | Text layout width |
+
+**rect** — Rectangle or rounded rectangle
+
+| Field | Required | Type | Description |
+|-------|----------|------|-------------|
+| `width` | Yes | int | Width |
+| `height` | Yes | int | Height |
+| `radius` | No | int | Corner radius |
+| `filled` | No | bool | `true` for filled, `false` for outline |
+
+**progress** — Progress bar
+
+| Field | Required | Type | Description |
+|-------|----------|------|-------------|
+| `width` | Yes | int | Width |
+| `height` | Yes | int | Height |
+| `value` | Yes | int (0-100) | Progress percentage |
+| `radius` | No | int | Corner radius |
+| `bg_color` | No | string | Background track color |
+
+**line** — Line between two points
+
+| Field | Required | Type | Description |
+|-------|----------|------|-------------|
+| `x2` | Yes | int | End point X |
+| `y2` | Yes | int | End point Y |
+| `stroke_width` | No | int | Line thickness |
+
+**circle** — Circle
+
+| Field | Required | Type | Description |
+|-------|----------|------|-------------|
+| `width` | Yes | int | Diameter |
+| `height` | Yes | int | Should match `width` |
+| `filled` | No | bool | Filled or outlined |
+| `stroke_width` | No | int | Border thickness |
+
+**ellipse** — Ellipse (same fields as circle, different width/height)
+
+**arc** — Arc stroke over angle range
+
+| Field | Required | Type | Description |
+|-------|----------|------|-------------|
+| `width` | Yes | int | Bounding box width |
+| `height` | Yes | int | Bounding box height |
+| `start_angle` | Yes | int | Start angle |
+| `end_angle` | Yes | int | End angle |
+| `stroke_width` | No | int | Arc thickness |
+
+**triangle** — Triangle from 3 points
+
+| Field | Required | Type | Description |
+|-------|----------|------|-------------|
+| `x2` | Yes | int | Point 2 X |
+| `y2` | Yes | int | Point 2 Y |
+| `x3` | Yes | int | Point 3 X |
+| `y3` | Yes | int | Point 3 Y |
+| `filled` | No | bool | Filled or outlined |
+
+**polygon** — Polygon from point list
+
+| Field | Required | Type | Description |
+|-------|----------|------|-------------|
+| `points` | Yes | string | Format: `x1,y1; x2,y2; x3,y3 ...` |
+| `filled` | No | bool | Filled or outlined |
+| `stroke_width` | No | int | Border thickness |
+
+**ring** — Circular/elliptical outline over angle range
+
+| Field | Required | Type | Description |
+|-------|----------|------|-------------|
+| `width` | Yes | int | Bounding box width |
+| `height` | Yes | int | Bounding box height |
+| `start_angle` | Yes | int | Start angle |
+| `end_angle` | Yes | int | End angle (360 for full ring) |
+| `stroke_width` | No | int | Ring thickness |
+
+**pie** — Filled wedge shape
+
+| Field | Required | Type | Description |
+|-------|----------|------|-------------|
+| `width` | Yes | int | Bounding box width |
+| `height` | Yes | int | Bounding box height |
+| `start_angle` | Yes | int | Start angle |
+| `end_angle` | Yes | int | End angle (360 for full pie) |
+
+#### Example — Compact usage card
 
 ```json
 {
   "items": [
-    {
-      "type": "text",
-      "text": "Usage",
-      "x": 0,
-      "y": 5,
-      "width": 240,
-      "align": "center",
-      "size": 3,
-      "color": "#ff4081"
-    },
-    {
-      "type": "text",
-      "text": "29%",
-      "x": 18,
-      "y": 42,
-      "width": 100,
-      "align": "left",
-      "size": 4,
-      "color": "#00e5ff"
-    },
-    {
-      "type": "text",
-      "text": "Current",
-      "x": 120,
-      "y": 50,
-      "width": 120,
-      "align": "right",
-      "size": 1,
-      "color": "#ffea00"
-    },
-    {
-      "type": "progress",
-      "value": 29,
-      "x": 18,
-      "y": 76,
-      "width": 184,
-      "height": 14,
-      "radius": 4,
-      "color": "#76ff03",
-      "bg_color": "#2f2f2f"
-    },
-    {
-      "type": "text",
-      "text": "Resets in 2h 22m",
-      "x": 18,
-      "y": 98,
-      "width": 200,
-      "align": "left",
-      "size": 1,
-      "color": "#ff9100"
-    }
+    { "type": "text", "text": "Usage", "x": 12, "y": 0, "width": 196, "size": 4, "color": "#ffffff" },
+    { "type": "rect", "x": 6, "y": 34, "width": 208, "height": 72, "radius": 10, "color": "#171d18" },
+    { "type": "text", "text": "29%", "x": 18, "y": 44, "width": 72, "size": 4, "color": "#ffffff" },
+    { "type": "progress", "x": 18, "y": 78, "width": 184, "height": 14, "radius": 4, "value": 29, "color": "#9bad67", "bg_color": "#2f2f2f" },
+    { "type": "text", "text": "Current load", "x": 110, "y": 48, "width": 90, "align": "right", "size": 1, "color": "#d7d7d7" },
+    { "type": "text", "text": "Resets in 2h 22m", "x": 18, "y": 98, "width": 160, "size": 1, "color": "#d7d7d7" }
   ]
 }
 ```
 
-**Example 2 — Weekly usage with status:**
+#### Example — Shape demo
 
 ```json
 {
   "items": [
-    {
-      "type": "text",
-      "text": "4%",
-      "x": 18,
-      "y": 5,
-      "width": 100,
-      "align": "left",
-      "size": 4,
-      "color": "#00e5ff"
-    },
-    {
-      "type": "text",
-      "text": "Weekly",
-      "x": 120,
-      "y": 13,
-      "width": 120,
-      "align": "right",
-      "size": 1,
-      "color": "#ffea00"
-    },
-    {
-      "type": "progress",
-      "value": 4,
-      "x": 18,
-      "y": 40,
-      "width": 184,
-      "height": 14,
-      "radius": 4,
-      "color": "#76ff03",
-      "bg_color": "#2f2f2f"
-    },
-    {
-      "type": "text",
-      "text": "Resets in 6d 19h",
-      "x": 18,
-      "y": 58,
-      "width": 200,
-      "align": "left",
-      "size": 1,
-      "color": "#ff9100"
-    },
-    {
-      "type": "text",
-      "text": "* Baking...",
-      "x": 0,
-      "y": 78,
-      "width": 240,
-      "align": "center",
-      "size": 2,
-      "color": "#ff4081"
-    }
+    { "type": "circle", "x": 10, "y": 12, "width": 28, "height": 28, "color": "#7cb342", "filled": true },
+    { "type": "ellipse", "x": 52, "y": 10, "width": 48, "height": 30, "color": "#ffffff", "filled": false, "stroke_width": 2 },
+    { "type": "line", "x": 8, "y": 64, "x2": 206, "y2": 64, "color": "#4fc3f7", "stroke_width": 3 },
+    { "type": "arc", "x": 118, "y": 10, "width": 38, "height": 38, "color": "#ffb300", "stroke_width": 4, "start_angle": 0, "end_angle": 270 },
+    { "type": "triangle", "x": 22, "y": 84, "x2": 44, "y2": 112, "x3": 4, "y3": 112, "color": "#ef5350", "filled": true },
+    { "type": "pie", "x": 166, "y": 82, "width": 36, "height": 36, "color": "#66bb6a", "start_angle": 0, "end_angle": 120 }
   ]
 }
 ```
 
-**Component types:**
+#### Example — LCD plus buzzer
 
-| Type | Description | Fields |
-|------|-------------|--------|
-| `text` | Render text at position | `text`, `x`, `y`, `width`, `align`, `size`, `color` |
-| `progress` | Render progress bar | `value` (0-100), `x`, `y`, `width`, `height`, `radius`, `color`, `bg_color` |
+```json
+{
+  "play_sound": 20,
+  "items": [
+    { "type": "text", "text": "Build passed", "x": 12, "y": 18, "width": 180, "size": 3, "color": "#ffffff" },
+    { "type": "text", "text": "Deploy complete", "x": 12, "y": 52, "width": 180, "size": 1, "color": "#9ad0a5" }
+  ]
+}
+```
 
-**Common fields:**
+---
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `type` | string | Component type (`text`, `progress`) |
-| `x` | int | X position in pixels |
-| `y` | int | Y position in pixels |
-| `width` | int | Width in pixels |
-| `color` | string | Hex color (e.g. `#9bad67`) |
+### 3.1.2. Buzzer Sound Presets
 
-**Text-specific fields:**
+`play_sound` can be included in any `POST /lcd` request (both legacy and rich mode). It plays once when the payload is accepted. Requires `text` or `items` — cannot be sent standalone.
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `text` | string | Content to display |
-| `align` | string | `left`, `center`, `right`. Default: `left` |
-| `size` | int (1-4) | Font size. Default: 2 |
+| Index | Name | Style |
+|-------|------|-------|
+| `0` | *(muted)* | Sound off |
+| `1` | `triple_ping` | Sharp high triple ping |
+| `2` | `lift_chime` | Smooth rising chime |
+| `3` | `bright_fanfare` | Bright success fanfare |
+| `4` | `micro_success` | Short positive triad |
+| `5` | `soft_drop` | Soft descending confirmation |
+| `6` | `double_tick` | Quick double tick and resolve |
+| `7` | `alert_fall` | Short alert drop |
+| `8` | `clean_pop` | Modern light popup sound |
+| `9` | `confirm_arc` | Rising confirm arc |
+| `10` | `status_ready` | Compact ready cue |
+| `11` | `soft_descend` | Calm descending tone |
+| `12` | `gentle_open` | Friendly open cue |
+| `13` | `focus_ping` | Clean focused ping |
+| `14` | `tap_rise` | Tap then rise |
+| `15` | `resolve_down` | Downward resolve |
+| `16` | `signal_up` | Fast upward signal |
+| `17` | `digital_bloom` | Slightly synthetic bloom |
+| `18` | `notify_peak` | Peak notification tone |
+| `19` | `warning_soft` | Soft warning fall |
+| `20` | `claude_style` | Crisp bright code-style notification |
 
-**Progress-specific fields:**
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `value` | int (0-100) | Progress percentage |
-| `height` | int | Bar height in pixels |
-| `radius` | int | Corner radius in pixels. Default: 0 |
-| `bg_color` | string | Background/empty color (hex) |
+**Recommended for Claude Code notifications:** `4`, `8`, `13`, `16`, `20`
 
 **Notes:**
-- When `items` is present, `text`/`size`/`color`/`title` fields are ignored.
-- Components render in array order (first = bottom, last = top).
-- Screen size: 135x240 pixels.
+- If a sound is already playing, new `play_sound` waits until the player is idle
+- `play_sound` requires `text` or `items` in the same request
 
 ---
 
