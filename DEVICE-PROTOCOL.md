@@ -244,6 +244,21 @@ If `items[]` contains at least one valid item, the firmware renders `items[]` an
 }
 ```
 
+#### Example — Weekly usage with status
+
+```json
+{
+  "play_sound": 20,
+  "items": [
+    { "type": "text", "text": "4%", "x": 18, "y": 5, "width": 100, "align": "left", "size": 4, "color": "#00e5ff" },
+    { "type": "text", "text": "Weekly", "x": 120, "y": 13, "width": 120, "align": "right", "size": 1, "color": "#ffea00" },
+    { "type": "progress", "value": 4, "x": 18, "y": 40, "width": 184, "height": 14, "radius": 4, "color": "#76ff03", "bg_color": "#2f2f2f" },
+    { "type": "text", "text": "Resets in 6d 19h", "x": 18, "y": 58, "width": 200, "align": "left", "size": 1, "color": "#4d96ff" },
+    { "type": "text", "text": "* Baking...", "x": 0, "y": 78, "width": 220, "align": "center", "size": 2, "color": "#ff4081" }
+  ]
+}
+```
+
 #### Example — LCD plus buzzer
 
 ```json

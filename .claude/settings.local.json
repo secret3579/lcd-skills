@@ -41,7 +41,9 @@
       "Bash(claude account *)",
       "Bash(claude status *)",
       "Bash(claude -p \"show my current usage stats in json format, including current period percentage, weekly percentage, and reset times. Only output the JSON, nothing else.\")",
-      "Bash(git rm *)"
+      "Bash(git rm *)",
+      "Bash(claude --version)",
+      "Bash(security find-generic-password *)"
     ]
   }
 }
