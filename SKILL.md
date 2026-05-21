@@ -70,12 +70,25 @@ One-time setup to register a new device. Uses OTP code displayed on the device s
 
 **When to use:** "pair my LCD", "add a screen", "set up device".
 
+### User-facing messages
+
+Only show simple, non-technical messages to the user during pairing:
+
+1. "Scanning your network..." (while discovery runs)
+2. "Found N device(s). Check your LCD screen for a pairing code." (after discovery)
+3. "What code do you see on your device?" (ask user)
+4. "Paired successfully! Your LCD should now show a confirmation." (after done)
+
+**Do NOT show** to user: device IDs, IP addresses, config paths, HTTP status codes, raw JSON, error tracebacks, or internal debug info. These are implementation details.
+
 ### Procedure
 
-1. Run discovery (section 1) to find **all** devices on the network.
-2. If no devices found → report failure, suggest checking power/WiFi.
-3. For each discovered device, generate a random **4-digit code** (1000–9999, unique per device).
-4. Send each device its code as a notification:
+1. Tell user: **"Scanning your network..."**
+2. Run discovery (section 1) to find **all** devices on the network.
+3. If no devices found → tell user: "No devices found. Make sure your LCD is powered on and connected to the same WiFi."
+4. Tell user: **"Found N device(s). Check your LCD screen for a pairing code."**
+5. For each discovered device, generate a random **4-digit code** (1000–9999, unique per device).
+6. Send each device its code as a notification (silently, don't show HTTP results to user):
    ```json
    {
      "play_sound": 20,
@@ -86,15 +99,16 @@ One-time setup to register a new device. Uses OTP code displayed on the device s
      ]
    }
    ```
-5. Ask user: **"What code do you see on your device?"** — match input to a device.
-6. Label defaults to **"My LCD"** (skip asking).
-7. Write to `~/.config/autonomous-lcd.json`:
+   Skip devices that fail to respond — don't mention them to the user.
+7. Ask user: **"What code do you see on your device?"** — match input to a device.
+8. Label defaults to **"My LCD"** (skip asking).
+9. Write to `~/.config/autonomous-lcd.json`:
    - New device → append to `devices[]`
    - Existing device ID → update entry
    - First device → set as `default_device_id`
    - Set file permission `0600`
-8. Send confirmation notification: `{"text": "Paired with Claude", "color": "green", "play_sound": 20}`
-9. Report success: device ID, label, IP.
+10. Send confirmation notification: `{"text": "Paired with Claude", "color": "green", "play_sound": 20}`
+11. Tell user: **"Paired successfully! Your LCD should now show a confirmation."**
 
 Re-pairing same device ID is an update, not an error.
 
