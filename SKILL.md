@@ -2,15 +2,19 @@
 name: lcd
 description: >
   Interact with the user's LCD notification device (ST7789, ESP32) over LAN.
-  Supports discovery, pairing, and sending notifications with plain text,
+  Supports pairing, sending notifications with plain text,
   rich layout (positioned text, shapes, progress bars), and buzzer sounds.
-  Triggers: "find my LCD", "pair my LCD", "show on my screen", "notify my LCD",
-  "ping my display when done", "send to my screen", "rescan for device".
+  Usage auto-updates on LCD via hook every time Claude responds.
+  Triggers: "pair my LCD", "show on my screen", "notify my LCD",
+  "ping my display when done", "send to my screen",
+  "show my usage on LCD", "unpair my LCD".
+allowed-tools: Bash(*)
 ---
 
 # LCD Skill
 
 Discover, pair, and send notifications to an ST7789 LCD device on the local network.
+After pairing, a launchd daemon automatically pushes Claude Code usage to the LCD every 5 minutes.
 
 ## Config
 
@@ -128,7 +132,7 @@ One-time setup to register a new device.
 ### Procedure
 
 1. Ask for **device ID** (format: `lcd-<6 hex>`, on sticker).
-2. Ask for **label** (optional, default "My LCD").
+2. Label defaults to **"My LCD"** (skip asking).
 3. Run discovery (section 1) to find the device IP.
 4. Verify via `GET /status` that `device_id` matches.
 5. Write to `~/.config/autonomous-lcd.json`:
@@ -143,19 +147,34 @@ Re-pairing same device ID is an update, not an error.
 
 ---
 
-## 3. Notify
+## 3. Unpair
+
+Remove a device.
+
+**When to use:** "unpair my LCD", "remove my LCD", "stop LCD updates".
+
+### Procedure
+
+1. Identify which device to unpair (default if not specified).
+2. Remove device from `~/.config/autonomous-lcd.json`.
+3. If removed device was `default_device_id`, clear it (or set to next device if any remain).
+4. Report success.
+
+---
+
+## 4. Notify
 
 Send a notification to a paired device. This is the most frequently used operation.
 
 **When to use:** "show on my screen", "notify my LCD", "ping my display when done". Also use proactively at end of long tasks (build, test, deploy).
 
-### 3.1 Pick device
+### 5.1 Pick device
 
 - Use device ID the user specified, OR
 - Use `default_device_id` from config, OR
 - Error if neither available. If no config or no devices → tell user to pair first.
 
-### 3.2 Build payload
+### 5.2 Build payload
 
 **Legacy text mode** — simple notification:
 
@@ -198,7 +217,7 @@ When `items[]` has at least one valid item, rich layout is used and `text` is ig
 - Item text max **95** chars
 - `value`: 0..100, `radius`: 0..50, `stroke_width`: 1..32
 
-### 3.3 Send
+### 5.3 Send
 
 ```python
 import json, urllib.request
@@ -218,7 +237,7 @@ with urllib.request.urlopen(req, timeout=3) as resp:
     print(resp.read().decode())
 ```
 
-### 3.4 Handle response
+### 5.4 Handle response
 
 | Status | Action |
 |--------|--------|
@@ -228,13 +247,139 @@ with urllib.request.urlopen(req, timeout=3) as resp:
 | **413** | Text >500 chars. Truncate to 497 + `"..."`, retry once. |
 | **Connection error/timeout** | Cached IP stale. Run rediscovery (section 1), retry once. |
 
-### 3.5 Dry run
+### 5.5 Dry run
 
 If user asks for dry run, show the payload and target URL without sending.
 
 ---
 
-## 4. Rich Layout Reference
+## 5. Usage Monitor (One-Shot)
+
+Fetch real usage data from the Claude Code API and display on LCD immediately. Used by the `/lcd:usage` slash command.
+
+**When to use:** "show my usage on LCD", "update usage now", "refresh LCD".
+
+### 6.1 Get OAuth token
+
+```python
+import json, os, subprocess
+
+def _find_strings(obj):
+    if isinstance(obj, str):
+        yield obj
+    elif isinstance(obj, dict):
+        for v in obj.values():
+            yield from _find_strings(v)
+    elif isinstance(obj, list):
+        for v in obj:
+            yield from _find_strings(v)
+
+def get_token():
+    cred_path = os.path.expanduser("~/.claude/.credentials.json")
+    if os.path.exists(cred_path):
+        with open(cred_path) as f:
+            data = json.load(f)
+        for v in _find_strings(data):
+            if v.startswith("sk-ant-oat"):
+                return v
+    try:
+        kc = subprocess.run(
+            ["security", "find-generic-password", "-s", "Claude Code-credentials", "-w"],
+            capture_output=True, text=True
+        )
+        if kc.returncode == 0:
+            data = json.loads(kc.stdout.strip())
+            for v in _find_strings(data):
+                if v.startswith("sk-ant-oat"):
+                    return v
+    except Exception:
+        pass
+    return None
+```
+
+### 6.2 Fetch usage
+
+```python
+import urllib.request
+from datetime import datetime, timezone
+
+def fetch_usage(token):
+    req = urllib.request.Request(
+        "https://api.anthropic.com/api/oauth/usage",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "anthropic-beta": "oauth-2025-04-20",
+        },
+    )
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        return json.loads(resp.read())
+
+def time_left(iso_str):
+    if not iso_str:
+        return "N/A"
+    diff = datetime.fromisoformat(iso_str) - datetime.now(timezone.utc)
+    total_sec = int(diff.total_seconds())
+    if total_sec <= 0:
+        return "now"
+    h = total_sec // 3600
+    m = (total_sec % 3600) // 60
+    if h > 24:
+        return f"{h // 24}d {h % 24}h"
+    return f"{h}h {m}m"
+```
+
+### 6.3 Build and send
+
+```python
+token = get_token()
+usage = fetch_usage(token)
+pct_5h = int(usage["five_hour"]["utilization"])
+pct_7d = int(usage["seven_day"]["utilization"])
+reset_5h = time_left(usage["five_hour"]["resets_at"])
+reset_7d = time_left(usage["seven_day"]["resets_at"])
+```
+
+**Section 1 — Header + Current (5-hour):**
+
+```json
+{
+  "play_sound": 20,
+  "items": [
+    { "type": "text", "text": "👾 Usage", "x": 0, "y": 0, "width": 220, "align": "center", "size": 4, "color": "#e8dcc8" },
+    { "type": "rect", "x": 6, "y": 30, "width": 208, "height": 82, "radius": 10, "color": "#1e2a22" },
+    { "type": "text", "text": "<pct_5h>%", "x": 18, "y": 36, "width": 100, "size": 4, "color": "#e8dcc8" },
+    { "type": "text", "text": "Current", "x": 100, "y": 44, "width": 105, "align": "right", "size": 1, "color": "#a09888" },
+    { "type": "progress", "x": 18, "y": 72, "width": 184, "height": 12, "radius": 6, "value": <pct_5h>, "color": "#6b8f4e", "bg_color": "#3a3a3a" },
+    { "type": "text", "text": "Resets in <reset_5h>", "x": 18, "y": 92, "width": 180, "size": 1, "color": "#9a9488" }
+  ]
+}
+```
+
+**Section 2 — Weekly (7-day) + status:**
+
+```json
+{
+  "play_sound": 0,
+  "items": [
+    { "type": "rect", "x": 6, "y": 0, "width": 208, "height": 82, "radius": 10, "color": "#1e2a22" },
+    { "type": "text", "text": "<pct_7d>%", "x": 18, "y": 6, "width": 100, "size": 4, "color": "#e8dcc8" },
+    { "type": "text", "text": "Weekly", "x": 100, "y": 14, "width": 105, "align": "right", "size": 1, "color": "#a09888" },
+    { "type": "progress", "x": 18, "y": 42, "width": 184, "height": 12, "radius": 6, "value": <pct_7d>, "color": "#6b8f4e", "bg_color": "#3a3a3a" },
+    { "type": "text", "text": "Resets in <reset_7d>", "x": 18, "y": 62, "width": 180, "size": 1, "color": "#9a9488" },
+    { "type": "text", "text": "* Baking...", "x": 0, "y": 92, "width": 220, "align": "center", "size": 2, "color": "#d4845a" }
+  ]
+}
+```
+
+Send section 1 first (with `play_sound: 20`), wait 7 seconds, then send section 2 (with `play_sound: 0`).
+
+Progress bar color: green `#6b8f4e` (<60%), orange `#d4845a` (60-79%), red `#c0392b` (≥80%).
+
+**Rate limit:** The usage API rate-limits hard. Do NOT poll faster than once per minute.
+
+---
+
+## 6. Rich Layout Reference
 
 ### Item types
 
@@ -343,7 +488,7 @@ If user asks for dry run, show the payload and target URL without sending.
 
 ---
 
-## 5. Buzzer Sound Presets
+## 7. Buzzer Sound Presets
 
 `play_sound` can be included in any request (both legacy and rich mode). Plays once when payload is accepted. Requires `text` or `items` — cannot be sent standalone.
 
@@ -375,7 +520,7 @@ Default notification sound: **20** (`claude_style`).
 
 ---
 
-## 6. Tested Examples
+## 8. Tested Examples
 
 Copy-paste ready payloads for quick testing.
 
@@ -437,171 +582,6 @@ Copy-paste ready payloads for quick testing.
   ]
 }
 ```
-
----
-
-## 7. Proactive / Scheduled Notifications
-
-Send notifications at regular intervals without user interaction. Useful for dashboards, monitoring, or periodic status updates.
-
-**When to use:** "send every 5 minutes", "update my LCD every hour", "keep my screen updated", "monitor and push to LCD", "show my usage on LCD".
-
-### 7.1 Claude Code Usage Monitor
-
-Fetch real usage data from the Claude Code API and display on LCD. No external scripts needed — uses the local OAuth token directly.
-
-**Get OAuth token:**
-
-```python
-import json, os, subprocess
-
-def get_token():
-    # Linux / WSL: plaintext credentials file
-    cred_path = os.path.expanduser("~/.claude/.credentials.json")
-    if os.path.exists(cred_path):
-        with open(cred_path) as f:
-            data = json.load(f)
-        for v in _find_strings(data):
-            if v.startswith("sk-ant-oat"):
-                return v
-
-    # macOS: stored in login Keychain
-    try:
-        kc = subprocess.run(
-            ["security", "find-generic-password", "-s", "Claude Code-credentials", "-w"],
-            capture_output=True, text=True
-        )
-        if kc.returncode == 0:
-            data = json.loads(kc.stdout.strip())
-            for v in _find_strings(data):
-                if v.startswith("sk-ant-oat"):
-                    return v
-    except Exception:
-        pass
-    return None
-
-def _find_strings(obj):
-    if isinstance(obj, str):
-        yield obj
-    elif isinstance(obj, dict):
-        for v in obj.values():
-            yield from _find_strings(v)
-    elif isinstance(obj, list):
-        for v in obj:
-            yield from _find_strings(v)
-```
-
-**Fetch usage and build payload:**
-
-```python
-import urllib.request
-from datetime import datetime, timezone
-
-def fetch_usage(token):
-    req = urllib.request.Request(
-        "https://api.anthropic.com/api/oauth/usage",
-        headers={
-            "Authorization": f"Bearer {token}",
-            "anthropic-beta": "oauth-2025-04-20",
-        },
-    )
-    with urllib.request.urlopen(req, timeout=15) as resp:
-        return json.loads(resp.read())
-
-def time_left(iso_str):
-    if not iso_str:
-        return "N/A"
-    diff = datetime.fromisoformat(iso_str) - datetime.now(timezone.utc)
-    total_sec = int(diff.total_seconds())
-    if total_sec <= 0:
-        return "now"
-    h = total_sec // 3600
-    m = (total_sec % 3600) // 60
-    if h > 24:
-        return f"{h // 24}d {h % 24}h"
-    return f"{h}h {m}m"
-
-token = get_token()
-usage = fetch_usage(token)
-pct_5h = int(usage["five_hour"]["utilization"])
-pct_7d = int(usage["seven_day"]["utilization"])
-reset_5h = time_left(usage["five_hour"]["resets_at"])
-reset_7d = time_left(usage["seven_day"]["resets_at"])
-
-# Section 1: Header + Current (5-hour)
-section1 = {
-    "play_sound": 20,
-    "items": [
-        { "type": "text", "text": "👾 Usage", "x": 0, "y": 0, "width": 220, "align": "center", "size": 4, "color": "#e8dcc8" },
-        { "type": "rect", "x": 6, "y": 30, "width": 208, "height": 82, "radius": 10, "color": "#1e2a22" },
-        { "type": "text", "text": f"{pct_5h}%", "x": 18, "y": 36, "width": 100, "size": 4, "color": "#e8dcc8" },
-        { "type": "text", "text": "Current", "x": 100, "y": 44, "width": 105, "align": "right", "size": 1, "color": "#a09888" },
-        { "type": "progress", "x": 18, "y": 72, "width": 184, "height": 12, "radius": 6, "value": pct_5h, "color": "#6b8f4e", "bg_color": "#3a3a3a" },
-        { "type": "text", "text": f"Resets in {reset_5h}", "x": 18, "y": 92, "width": 180, "size": 1, "color": "#9a9488" }
-    ]
-}
-
-# Section 2: Weekly (7-day) + status
-section2 = {
-    "play_sound": 20,
-    "items": [
-        { "type": "rect", "x": 6, "y": 0, "width": 208, "height": 82, "radius": 10, "color": "#1e2a22" },
-        { "type": "text", "text": f"{pct_7d}%", "x": 18, "y": 6, "width": 100, "size": 4, "color": "#e8dcc8" },
-        { "type": "text", "text": "Weekly", "x": 100, "y": 14, "width": 105, "align": "right", "size": 1, "color": "#a09888" },
-        { "type": "progress", "x": 18, "y": 42, "width": 184, "height": 12, "radius": 6, "value": pct_7d, "color": "#6b8f4e", "bg_color": "#3a3a3a" },
-        { "type": "text", "text": f"Resets in {reset_7d}", "x": 18, "y": 62, "width": 180, "size": 1, "color": "#9a9488" },
-        { "type": "text", "text": "* Baking...", "x": 0, "y": 92, "width": 220, "align": "center", "size": 2, "color": "#d4845a" }
-    ]
-}
-```
-
-**Rate limit:** The usage API rate-limits hard. Do NOT poll faster than once per minute. Recommended interval: **5 minutes**.
-
-### 7.2 Background Loop Pattern
-
-Run a background process that sends at a fixed interval:
-
-```python
-import json, urllib.request, time, os
-
-INTERVAL = 300  # seconds (5 minutes)
-
-with open(os.path.expanduser("~/.config/autonomous-lcd.json")) as f:
-    cfg = json.load(f)
-device = cfg["devices"][0]
-ip = device["last_known_ip"]
-device_id = device["device_id"]
-
-def send(payload):
-    try:
-        req = urllib.request.Request(
-            f"http://{ip}:3000/lcd",
-            data=json.dumps(payload).encode(),
-            headers={"Content-Type": "application/json", "X-Device-ID": device_id},
-            method="POST",
-        )
-        with urllib.request.urlopen(req, timeout=3) as resp:
-            return resp.status
-    except Exception:
-        return None
-
-first = True
-while True:
-    payload = build_payload()  # replace with actual payload logic
-    if first:
-        payload["play_sound"] = 20
-        first = False
-    send(payload)
-    time.sleep(INTERVAL)
-```
-
-### Guidelines
-
-- Use `play_sound` only on the **first** send or when status changes — avoid buzzing every interval.
-- Always wrap `send()` in try/except so timeouts don't kill the loop.
-- For one-shot delayed sends, use `time.sleep(delay)` before a single send instead of a loop.
-- If the user asks to stop, kill the background process.
-- Recommended intervals: 60s minimum. The usage API enforces at least 60s between calls.
 
 ---
 

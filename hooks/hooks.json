@@ -1,0 +1,17 @@
+{
+  "description": "Send usage data to LCD when Claude finishes a response",
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/on-stop-usage.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

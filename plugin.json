@@ -1,0 +1,5 @@
+{
+  "name": "lcd",
+  "description": "Display Claude Code usage and notifications on your ESP32 ST7789 LCD device. Auto-updates every 5 minutes via background daemon after one-time pairing.",
+  "version": "1.0.0"
+}
