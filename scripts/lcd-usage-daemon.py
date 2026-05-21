@@ -108,12 +108,11 @@ def build_section1(pct_5h, reset_5h, sound=0):
     return {
         "play_sound": sound,
         "items": [
-            {"type": "text", "text": "\U0001f47e Usage", "x": 0, "y": 0, "width": 220, "align": "center", "size": 4, "color": "#d4845a"},
-            {"type": "rect", "x": 6, "y": 30, "width": 208, "height": 82, "radius": 10, "color": "#1e2a22"},
-            {"type": "text", "text": f"{pct_5h}%", "x": 18, "y": 36, "width": 100, "size": 4, "color": progress_color(pct_5h)},
-            {"type": "text", "text": "Current", "x": 100, "y": 44, "width": 105, "align": "right", "size": 1, "color": "#7eb8da"},
-            {"type": "progress", "x": 18, "y": 72, "width": 184, "height": 12, "radius": 6, "value": pct_5h, "color": progress_color(pct_5h), "bg_color": "#3a3a3a"},
-            {"type": "text", "text": f"Resets in {reset_5h}", "x": 18, "y": 92, "width": 180, "size": 1, "color": "#e8dcc8"},
+            {"type": "text", "text": "Usage", "x": 0, "y": 5, "width": 220, "align": "center", "size": 4, "color": "#d4845a"},
+            {"type": "text", "text": f"{pct_5h}%", "x": 18, "y": 38, "width": 100, "size": 4, "color": progress_color(pct_5h)},
+            {"type": "text", "text": "Current", "x": 100, "y": 46, "width": 105, "align": "right", "size": 1, "color": "#7eb8da"},
+            {"type": "progress", "x": 18, "y": 70, "width": 184, "height": 12, "radius": 6, "value": pct_5h, "color": progress_color(pct_5h), "bg_color": "#3a3a3a"},
+            {"type": "text", "text": f"Resets in {reset_5h}", "x": 18, "y": 90, "width": 180, "size": 1, "color": "#e8dcc8"},
         ],
     }
 
@@ -122,12 +121,11 @@ def build_section2(pct_7d, reset_7d, sound=0):
     return {
         "play_sound": sound,
         "items": [
-            {"type": "rect", "x": 6, "y": 0, "width": 208, "height": 82, "radius": 10, "color": "#1e2a22"},
-            {"type": "text", "text": f"{pct_7d}%", "x": 18, "y": 6, "width": 100, "size": 4, "color": "#e8dcc8"},
-            {"type": "text", "text": "Weekly", "x": 100, "y": 14, "width": 105, "align": "right", "size": 1, "color": "#a09888"},
-            {"type": "progress", "x": 18, "y": 42, "width": 184, "height": 12, "radius": 6, "value": pct_7d, "color": progress_color(pct_7d), "bg_color": "#3a3a3a"},
-            {"type": "text", "text": f"Resets in {reset_7d}", "x": 18, "y": 62, "width": 180, "size": 1, "color": "#9a9488"},
-            {"type": "text", "text": "* Baking...", "x": 0, "y": 92, "width": 220, "align": "center", "size": 2, "color": "#d4845a"},
+            {"type": "text", "text": f"{pct_7d}%", "x": 18, "y": 10, "width": 100, "size": 4, "color": "#e8dcc8"},
+            {"type": "text", "text": "Weekly", "x": 100, "y": 18, "width": 105, "align": "right", "size": 1, "color": "#a09888"},
+            {"type": "progress", "x": 18, "y": 45, "width": 184, "height": 12, "radius": 6, "value": pct_7d, "color": progress_color(pct_7d), "bg_color": "#3a3a3a"},
+            {"type": "text", "text": f"Resets in {reset_7d}", "x": 18, "y": 63, "width": 180, "size": 1, "color": "#9a9488"},
+            {"type": "text", "text": "* Baking...", "x": 0, "y": 87, "width": 220, "align": "center", "size": 2, "color": "#d4845a"},
         ],
     }
 
