@@ -1,0 +1,15 @@
+{
+  "name": "lcd-skills",
+  "description": "LCD notification device plugins for Claude Code",
+  "owner": {
+    "name": "0x0409",
+    "email": ""
+  },
+  "plugins": [
+    {
+      "name": "lcd",
+      "description": "Display Claude Code usage and notifications on your ESP32 ST7789 LCD device",
+      "source": "."
+    }
+  ]
+}
