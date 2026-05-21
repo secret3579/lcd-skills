@@ -9,7 +9,10 @@
     {
       "name": "lcd",
       "description": "Display Claude Code usage and notifications on your ESP32 ST7789 LCD device",
-      "source": "."
+      "source": {
+        "source": "url",
+        "url": "git@github.com:secret3579/lcd-skills.git"
+      }
     }
   ]
 }
