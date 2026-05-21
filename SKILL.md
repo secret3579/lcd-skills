@@ -40,88 +40,27 @@ Device ID format: `lcd-<6 lowercase hex digits>` (from last 3 bytes of MAC addre
 
 ## 1. Discover
 
-Find devices on the LAN. Can find a specific paired device or scan for all available devices.
+Find devices on the LAN using the bundled discovery script.
 
-**When to use:** when a notification fails with connection error/timeout, or during pairing to find all devices.
+**When to use:** during pairing, or when a notification fails with connection error/timeout.
 
-### 1.1 Cache check (fast path — single device only)
-
-```bash
-curl -s --max-time 0.5 http://<last_known_ip>:3000/status
-```
-
-If `device_id` in response matches → update `last_seen_at`, done.
-
-### 1.2 mDNS service browse
-
-`dns-sd` on macOS runs interactively and never exits. Run it in background and kill after 3 seconds:
+### Run discovery
 
 ```bash
-dns-sd -B _autonomous-lcd._tcp &
-PID=$!
-sleep 3
-kill $PID 2>/dev/null
-wait $PID 2>/dev/null
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/discover.py
 ```
 
-For each service found, resolve hostname then IP:
-
-```bash
-dns-sd -L "<service-name>" _autonomous-lcd._tcp &
-PID=$!; sleep 3; kill $PID 2>/dev/null; wait $PID 2>/dev/null
-
-dns-sd -G v4 <hostname> &
-PID=$!; sleep 3; kill $PID 2>/dev/null; wait $PID 2>/dev/null
+**Output:** JSON array of found devices, e.g.:
+```json
+[{"device_id": "lcd-bd4a14", "ip": "192.168.1.42"}]
 ```
 
-Collect **all** discovered devices (device_id + IP) from TXT records and resolved IPs.
+**How it works (automatic):**
+1. Cache check — tries cached IPs from config (instant)
+2. Parallel scan — runs mDNS browse + UDP subnet sweep simultaneously (~10s)
+3. Returns all found devices, deduplicated by device_id
 
-### 1.3 UDP probe sweep (fallback)
-
-If mDNS finds nothing (multicast may be blocked):
-
-```bash
-python3 -c '
-import socket, json, sys, concurrent.futures
-
-SUBNET = "<subnet_prefix>"  # e.g. "192.168.1"
-
-def probe(ip):
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.settimeout(1)
-        s.sendto(b"AUTONOMOUS_LCD_PROBE?", (ip, 49152))
-        data, _ = s.recvfrom(1024)
-        return json.loads(data), ip
-    except Exception:
-        return None, None
-    finally:
-        s.close()
-
-found = []
-candidates = [f"{SUBNET}.{i}" for i in range(1, 255)]
-with concurrent.futures.ThreadPoolExecutor(max_workers=50) as pool:
-    futures = [pool.submit(probe, ip) for ip in candidates]
-    for f in concurrent.futures.as_completed(futures):
-        info, ip = f.result()
-        if info and info.get("device_id"):
-            found.append({"ip": ip, **info})
-
-if found:
-    print(json.dumps(found))
-else:
-    print(json.dumps({"error": "not_found"}), file=sys.stderr)
-    sys.exit(1)
-'
-```
-
-Get subnet from: `ifconfig | grep "inet " | grep -v 127.0.0.1`
-
-Never scan a subnet larger than /22 without user confirmation.
-
-### 1.4 Failure
-
-Report which stages ran, how many IPs probed, and suggest: device powered on? Same WiFi?
+**On failure:** exits with code 1, stderr contains `{"error": "not_found"}`. Suggest: device powered on? Same WiFi?
 
 ---
 
