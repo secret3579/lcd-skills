@@ -1,77 +1,44 @@
 # LCD Plugin for Claude Code
 
-Display Claude Code usage and notifications on your ESP32 ST7789 LCD device.
+Turn your ESP32 LCD into a live Claude Code usage monitor. Usage auto-updates every time Claude responds — no dashboard, no browser, just a glance at your desk.
 
-## Install
+## Quick Start
 
 ```bash
-claude --plugin-dir /path/to/lcd-skills
+claude plugins marketplace add https://github.com/secret3579/lcd-skills
+claude plugins install lcd
 ```
 
-Or add to `~/.claude/settings.json`:
+Restart Claude Code, then type `pair my LCD` and follow the on-screen instructions.
 
-```json
-{
-  "plugins": ["/path/to/lcd-skills"]
-}
-```
+See the full [Setup Guide](GUIDE.md) for details.
 
-## Setup
+## Features
 
-Tell Claude Code:
+- **Live usage display** — 5-hour and 7-day usage auto-updates on LCD after every Claude response
+- **Notifications** — send custom messages to the screen ("notify my LCD when done")
+- **OTP pairing** — no sticker reading, just enter the code shown on screen
+- **Zero dependencies** — Python 3 stdlib only, no pip install needed
 
-> "pair my LCD"
-
-It will ask for your device ID (printed on the sticker, format: `lcd-XXXXXX`) and discover the device on your network.
-
-## What you get
-
-- **Auto-updating LCD** — Claude Code usage auto-updates on LCD every time Claude responds (via Stop hook, rate-limited to once per 60s).
-- **On-demand usage** — `/lcd:usage` fetches and displays live usage immediately.
-- **Notifications** — `/lcd:notify` or just say "notify my LCD when done" during any task.
-
-## Slash commands
+## Commands
 
 | Command | Description |
 |---------|-------------|
-| `/lcd:usage` | Fetch and display usage now |
-| `/lcd:notify` | Send a notification to the LCD |
+| `/lcd:usage` | Refresh usage display now |
+| `/lcd:notify` | Send a notification |
 
-## Natural language triggers
-
-- "pair my LCD" / "unpair my LCD"
-- "show my usage on LCD"
-- "notify my LCD" / "ping my display when done"
-- "find my LCD" / "rescan for device"
-- "LCD status"
+Or use natural language: "show my usage on LCD", "notify my LCD", "unpair my LCD"
 
 ## Requirements
 
-- macOS (Keychain for OAuth token)
-- Python 3 (stdlib only, no pip packages)
-- ESP32 ST7789 LCD device on the same LAN
-- Claude Code subscription (OAuth login, not API key)
+- macOS
+- Python 3
+- ESP32 ST7789 LCD device on the same WiFi
+- Claude Code with OAuth login
 
-## Files
+## Update / Uninstall
 
+```bash
+claude plugins update lcd      # pull latest
+claude plugins uninstall lcd   # remove plugin
 ```
-lcd-skills/
-├── plugin.json              Plugin manifest
-├── SKILL.md                 Main skill definition
-├── usage.md                 /lcd:usage slash command
-├── notify.md                /lcd:notify slash command
-├── README.md                This file
-├── hooks/
-│   └── hooks.json           Stop hook config (auto-update usage)
-└── scripts/
-    ├── lcd-usage-daemon.py  Fetch usage and send to LCD
-    └── on-stop-usage.py     Hook script (called on Stop event)
-```
-
-## Uninstall
-
-Tell Claude Code:
-
-> "unpair my LCD"
-
-To fully remove, also uninstall the plugin: `claude plugins uninstall lcd`
