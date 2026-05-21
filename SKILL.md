@@ -81,6 +81,8 @@ Only show simple, non-technical messages to the user during pairing:
 
 **Do NOT show** to user: device IDs, IP addresses, config paths, HTTP status codes, raw JSON, error tracebacks, or internal debug info. These are implementation details.
 
+**Bash output:** All bash commands in the pair flow should redirect stdout to `/dev/null` or use a wrapper that only prints a single friendly message (e.g. `"done"` or `"ok"`). Never let raw JSON, device IDs, or HTTP responses appear in the transcript. Pipe discovery output into a variable and process silently within the same script.
+
 ### Procedure
 
 1. Tell user: **"Scanning your network..."**
