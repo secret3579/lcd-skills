@@ -40,11 +40,11 @@ Device ID format: `lcd-<6 lowercase hex digits>` (from last 3 bytes of MAC addre
 
 ## 1. Discover
 
-Find a paired device on the LAN and update its cached IP.
+Find devices on the LAN. Can find a specific paired device or scan for all available devices.
 
-**When to use:** "find my LCD", "rescan", "LCD stopped responding", or when a notification fails with connection error/timeout.
+**When to use:** when a notification fails with connection error/timeout, or during pairing to find all devices.
 
-### 1.1 Cache check (fast path)
+### 1.1 Cache check (fast path — single device only)
 
 ```bash
 curl -s --max-time 0.5 http://<last_known_ip>:3000/status
@@ -74,7 +74,7 @@ dns-sd -G v4 <hostname> &
 PID=$!; sleep 3; kill $PID 2>/dev/null; wait $PID 2>/dev/null
 ```
 
-Match by `device_id` in TXT records. Parse IP from the `Add` line. If found → update config, done.
+Collect **all** discovered devices (device_id + IP) from TXT records and resolved IPs.
 
 ### 1.3 UDP probe sweep (fallback)
 
@@ -84,7 +84,6 @@ If mDNS finds nothing (multicast may be blocked):
 python3 -c '
 import socket, json, sys, concurrent.futures
 
-TARGET = "<device_id>"
 SUBNET = "<subnet_prefix>"  # e.g. "192.168.1"
 
 def probe(ip):
@@ -99,17 +98,20 @@ def probe(ip):
     finally:
         s.close()
 
+found = []
 candidates = [f"{SUBNET}.{i}" for i in range(1, 255)]
 with concurrent.futures.ThreadPoolExecutor(max_workers=50) as pool:
     futures = [pool.submit(probe, ip) for ip in candidates]
     for f in concurrent.futures.as_completed(futures):
         info, ip = f.result()
-        if info and info.get("device_id") == TARGET:
-            print(json.dumps({"ip": ip, **info}))
-            sys.exit(0)
+        if info and info.get("device_id"):
+            found.append({"ip": ip, **info})
 
-print(json.dumps({"error": "not_found"}), file=sys.stderr)
-sys.exit(1)
+if found:
+    print(json.dumps(found))
+else:
+    print(json.dumps({"error": "not_found"}), file=sys.stderr)
+    sys.exit(1)
 '
 ```
 
@@ -125,23 +127,35 @@ Report which stages ran, how many IPs probed, and suggest: device powered on? Sa
 
 ## 2. Pair
 
-One-time setup to register a new device.
+One-time setup to register a new device. Uses OTP code displayed on the device screen — no need to read device ID stickers.
 
 **When to use:** "pair my LCD", "add a screen", "set up device".
 
 ### Procedure
 
-1. Ask for **device ID** (format: `lcd-<6 hex>`, on sticker).
-2. Label defaults to **"My LCD"** (skip asking).
-3. Run discovery (section 1) to find the device IP.
-4. Verify via `GET /status` that `device_id` matches.
-5. Write to `~/.config/autonomous-lcd.json`:
+1. Run discovery (section 1) to find **all** devices on the network.
+2. If no devices found → report failure, suggest checking power/WiFi.
+3. For each discovered device, generate a random **4-digit code** (1000–9999, unique per device).
+4. Send each device its code as a notification:
+   ```json
+   {
+     "play_sound": 20,
+     "items": [
+       { "type": "text", "text": "Pairing", "x": 0, "y": 0, "width": 220, "align": "center", "size": 3, "color": "#7eb8da" },
+       { "type": "text", "text": "<CODE>", "x": 0, "y": 35, "width": 220, "align": "center", "size": 4, "color": "#e8dcc8" },
+       { "type": "text", "text": "Enter this code", "x": 0, "y": 85, "width": 220, "align": "center", "size": 2, "color": "#9a9488" }
+     ]
+   }
+   ```
+5. Ask user: **"What code do you see on your device?"** — match input to a device.
+6. Label defaults to **"My LCD"** (skip asking).
+7. Write to `~/.config/autonomous-lcd.json`:
    - New device → append to `devices[]`
    - Existing device ID → update entry
    - First device → set as `default_device_id`
    - Set file permission `0600`
-6. Send confirmation notification: `{"text": "Paired with Claude", "color": "green", "play_sound": 20}`
-7. Report success: device ID, label, IP.
+8. Send confirmation notification: `{"text": "Paired with Claude", "color": "green", "play_sound": 20}`
+9. Report success: device ID, label, IP.
 
 Re-pairing same device ID is an update, not an error.
 
