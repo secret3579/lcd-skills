@@ -14,7 +14,7 @@ allowed-tools: Bash(*)
 # LCD Skill
 
 Discover, pair, and send notifications to an ST7789 LCD device on the local network.
-After pairing, a launchd daemon automatically pushes Claude Code usage to the LCD every 5 minutes.
+After pairing, usage auto-updates on LCD via Stop hook every time Claude responds.
 
 ## Config
 
@@ -137,13 +137,13 @@ Send a notification to a paired device. This is the most frequently used operati
 
 **When to use:** "show on my screen", "notify my LCD", "ping my display when done". Also use proactively at end of long tasks (build, test, deploy).
 
-### 5.1 Pick device
+### 4.1 Pick device
 
 - Use device ID the user specified, OR
 - Use `default_device_id` from config, OR
 - Error if neither available. If no config or no devices → tell user to pair first.
 
-### 5.2 Build payload
+### 4.2 Build payload
 
 **Legacy text mode** — simple notification:
 
@@ -186,7 +186,7 @@ When `items[]` has at least one valid item, rich layout is used and `text` is ig
 - Item text max **95** chars
 - `value`: 0..100, `radius`: 0..50, `stroke_width`: 1..32
 
-### 5.3 Send
+### 4.3 Send
 
 ```python
 import json, urllib.request
@@ -206,7 +206,7 @@ with urllib.request.urlopen(req, timeout=3) as resp:
     print(resp.read().decode())
 ```
 
-### 5.4 Handle response
+### 4.4 Handle response
 
 | Status | Action |
 |--------|--------|
@@ -216,7 +216,7 @@ with urllib.request.urlopen(req, timeout=3) as resp:
 | **413** | Text >500 chars. Truncate to 497 + `"..."`, retry once. |
 | **Connection error/timeout** | Cached IP stale. Run rediscovery (section 1), retry once. |
 
-### 5.5 Dry run
+### 4.5 Dry run
 
 If user asks for dry run, show the payload and target URL without sending.
 
@@ -228,7 +228,7 @@ Fetch real usage data from the Claude Code API and display on LCD immediately. U
 
 **When to use:** "show my usage on LCD", "update usage now", "refresh LCD".
 
-### 6.1 Get OAuth token
+### 5.1 Get OAuth token
 
 ```python
 import json, os, subprocess
@@ -266,7 +266,7 @@ def get_token():
     return None
 ```
 
-### 6.2 Fetch usage
+### 5.2 Fetch usage
 
 ```python
 import urllib.request
@@ -297,7 +297,7 @@ def time_left(iso_str):
     return f"{h}h {m}m"
 ```
 
-### 6.3 Build and send
+### 5.3 Build and send
 
 ```python
 token = get_token()
@@ -314,12 +314,12 @@ reset_7d = time_left(usage["seven_day"]["resets_at"])
 {
   "play_sound": 20,
   "items": [
-    { "type": "text", "text": "👾 Usage", "x": 0, "y": 0, "width": 220, "align": "center", "size": 4, "color": "#e8dcc8" },
+    { "type": "text", "text": "👾 Usage", "x": 0, "y": 0, "width": 220, "align": "center", "size": 4, "color": "#d4845a" },
     { "type": "rect", "x": 6, "y": 30, "width": 208, "height": 82, "radius": 10, "color": "#1e2a22" },
-    { "type": "text", "text": "<pct_5h>%", "x": 18, "y": 36, "width": 100, "size": 4, "color": "#e8dcc8" },
-    { "type": "text", "text": "Current", "x": 100, "y": 44, "width": 105, "align": "right", "size": 1, "color": "#a09888" },
-    { "type": "progress", "x": 18, "y": 72, "width": 184, "height": 12, "radius": 6, "value": <pct_5h>, "color": "#6b8f4e", "bg_color": "#3a3a3a" },
-    { "type": "text", "text": "Resets in <reset_5h>", "x": 18, "y": 92, "width": 180, "size": 1, "color": "#9a9488" }
+    { "type": "text", "text": "<pct_5h>%", "x": 18, "y": 36, "width": 100, "size": 4, "color": "<progress_color>" },
+    { "type": "text", "text": "Current", "x": 100, "y": 44, "width": 105, "align": "right", "size": 1, "color": "#7eb8da" },
+    { "type": "progress", "x": 18, "y": 72, "width": 184, "height": 12, "radius": 6, "value": <pct_5h>, "color": "<progress_color>", "bg_color": "#3a3a3a" },
+    { "type": "text", "text": "Resets in <reset_5h>", "x": 18, "y": 92, "width": 180, "size": 1, "color": "#e8dcc8" }
   ]
 }
 ```
@@ -328,7 +328,7 @@ reset_7d = time_left(usage["seven_day"]["resets_at"])
 
 ```json
 {
-  "play_sound": 0,
+  "play_sound": 20,
   "items": [
     { "type": "rect", "x": 6, "y": 0, "width": 208, "height": 82, "radius": 10, "color": "#1e2a22" },
     { "type": "text", "text": "<pct_7d>%", "x": 18, "y": 6, "width": 100, "size": 4, "color": "#e8dcc8" },
@@ -340,7 +340,7 @@ reset_7d = time_left(usage["seven_day"]["resets_at"])
 }
 ```
 
-Send section 1 first (with `play_sound: 20`), wait 7 seconds, then send section 2 (with `play_sound: 0`).
+Send section 1 first (with `play_sound: 20`), wait 7 seconds, then send section 2 (with `play_sound: 20`).
 
 Progress bar color: green `#6b8f4e` (<60%), orange `#d4845a` (60-79%), red `#c0392b` (≥80%).
 
