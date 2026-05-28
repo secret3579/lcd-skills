@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(*)",
-      "Skill(vibe-desk-display:vibe-desk-display)"
-    ]
-  }
-}
