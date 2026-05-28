@@ -1,6 +1,6 @@
 # Vibe Desk Display for Claude Code
 
-Turn your ESP32 desk display into a live Claude Code usage monitor. Usage auto-updates every time Claude responds — no dashboard, no browser, just a glance at your desk.
+Turn your VibeDesk into a live Claude Code usage monitor. Usage auto-updates every time Claude responds — no dashboard, no browser, just a glance at your desk.
 
 ## Quick Start
 

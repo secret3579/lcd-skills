@@ -1,6 +1,6 @@
 # Vibe Desk Display — Setup Guide
 
-Turn your ESP32 desk display into a live Claude Code usage monitor.
+Turn your VibeDesk into a live Claude Code usage monitor.
 
 ---
 
