@@ -6,8 +6,8 @@ Turn your ESP32 desk display into a live Claude Code usage monitor.
 
 ## What you need
 
-- An ESP32 ST7789 desk display
-- Your computer and the device on the same WiFi network
+- A VibeDesk device, set up via the mobile app
+- Your computer and VibeDesk on the same WiFi network
 - Claude Code (with OAuth login, not API key)
 
 ---
@@ -30,7 +30,7 @@ Then **restart Claude Code** (exit and reopen).
 
 ## Pair your device
 
-1. Power on your display
+1. Make sure your VibeDesk is set up and connected to the same WiFi as your computer
 2. Open Claude Code and type:
 
 ```

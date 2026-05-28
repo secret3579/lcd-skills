@@ -33,7 +33,7 @@ Or use natural language: "show my usage on display", "notify my display", "unpai
 
 - macOS
 - Python 3
-- ESP32 ST7789 desk display on the same WiFi
+- A VibeDesk device on the same WiFi
 - Claude Code with OAuth login
 
 ## Update / Uninstall
