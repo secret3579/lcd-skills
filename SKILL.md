@@ -314,12 +314,11 @@ reset_7d = time_left(usage["seven_day"]["resets_at"])
 {
   "play_sound": 20,
   "items": [
-    { "type": "text", "text": "👾 Usage", "x": 0, "y": 0, "width": 220, "align": "center", "size": 4, "color": "#d4845a" },
-    { "type": "rect", "x": 6, "y": 30, "width": 208, "height": 82, "radius": 10, "color": "#1e2a22" },
-    { "type": "text", "text": "<pct_5h>%", "x": 18, "y": 36, "width": 100, "size": 4, "color": "<progress_color>" },
-    { "type": "text", "text": "Current", "x": 100, "y": 44, "width": 105, "align": "right", "size": 1, "color": "#7eb8da" },
-    { "type": "progress", "x": 18, "y": 72, "width": 184, "height": 12, "radius": 6, "value": <pct_5h>, "color": "<progress_color>", "bg_color": "#3a3a3a" },
-    { "type": "text", "text": "Resets in <reset_5h>", "x": 18, "y": 92, "width": 180, "size": 1, "color": "#e8dcc8" }
+    { "type": "text", "text": "Usage", "x": 0, "y": 5, "width": 220, "align": "center", "size": 4, "color": "#d4845a" },
+    { "type": "text", "text": "<pct_5h>%", "x": 18, "y": 38, "width": 100, "size": 4, "color": "<progress_color>" },
+    { "type": "text", "text": "Current", "x": 100, "y": 46, "width": 105, "align": "right", "size": 1, "color": "#7eb8da" },
+    { "type": "progress", "x": 18, "y": 70, "width": 184, "height": 12, "radius": 6, "value": <pct_5h>, "color": "<progress_color>", "bg_color": "#3a3a3a" },
+    { "type": "text", "text": "Resets in <reset_5h>", "x": 18, "y": 90, "width": 180, "size": 1, "color": "#e8dcc8" }
   ]
 }
 ```
@@ -330,12 +329,11 @@ reset_7d = time_left(usage["seven_day"]["resets_at"])
 {
   "play_sound": 20,
   "items": [
-    { "type": "rect", "x": 6, "y": 0, "width": 208, "height": 82, "radius": 10, "color": "#1e2a22" },
-    { "type": "text", "text": "<pct_7d>%", "x": 18, "y": 6, "width": 100, "size": 4, "color": "#e8dcc8" },
-    { "type": "text", "text": "Weekly", "x": 100, "y": 14, "width": 105, "align": "right", "size": 1, "color": "#a09888" },
-    { "type": "progress", "x": 18, "y": 42, "width": 184, "height": 12, "radius": 6, "value": <pct_7d>, "color": "#6b8f4e", "bg_color": "#3a3a3a" },
-    { "type": "text", "text": "Resets in <reset_7d>", "x": 18, "y": 62, "width": 180, "size": 1, "color": "#9a9488" },
-    { "type": "text", "text": "* Baking...", "x": 0, "y": 92, "width": 220, "align": "center", "size": 2, "color": "#d4845a" }
+    { "type": "text", "text": "<pct_7d>%", "x": 18, "y": 10, "width": 100, "size": 4, "color": "#e8dcc8" },
+    { "type": "text", "text": "Weekly", "x": 100, "y": 18, "width": 105, "align": "right", "size": 1, "color": "#a09888" },
+    { "type": "progress", "x": 18, "y": 45, "width": 184, "height": 12, "radius": 6, "value": <pct_7d>, "color": "<progress_color>", "bg_color": "#3a3a3a" },
+    { "type": "text", "text": "Resets in <reset_7d>", "x": 18, "y": 63, "width": 180, "size": 1, "color": "#9a9488" },
+    { "type": "text", "text": "* Baking...", "x": 0, "y": 87, "width": 220, "align": "center", "size": 2, "color": "#d4845a" }
   ]
 }
 ```
@@ -499,12 +497,11 @@ Copy-paste ready payloads for quick testing.
 {
   "play_sound": 20,
   "items": [
-    { "type": "text", "text": "👾 Usage", "x": 0, "y": 0, "width": 220, "align": "center", "size": 4, "color": "#e8dcc8" },
-    { "type": "rect", "x": 6, "y": 30, "width": 208, "height": 82, "radius": 10, "color": "#1e2a22" },
-    { "type": "text", "text": "41%", "x": 18, "y": 36, "width": 100, "size": 4, "color": "#e8dcc8" },
-    { "type": "text", "text": "Current", "x": 100, "y": 44, "width": 105, "align": "right", "size": 1, "color": "#a09888" },
-    { "type": "progress", "x": 18, "y": 72, "width": 184, "height": 12, "radius": 6, "value": 41, "color": "#6b8f4e", "bg_color": "#3a3a3a" },
-    { "type": "text", "text": "Resets in 1h 56m", "x": 18, "y": 92, "width": 180, "size": 1, "color": "#9a9488" }
+    { "type": "text", "text": "Usage", "x": 0, "y": 5, "width": 220, "align": "center", "size": 4, "color": "#d4845a" },
+    { "type": "text", "text": "41%", "x": 18, "y": 38, "width": 100, "size": 4, "color": "#6b8f4e" },
+    { "type": "text", "text": "Current", "x": 100, "y": 46, "width": 105, "align": "right", "size": 1, "color": "#7eb8da" },
+    { "type": "progress", "x": 18, "y": 70, "width": 184, "height": 12, "radius": 6, "value": 41, "color": "#6b8f4e", "bg_color": "#3a3a3a" },
+    { "type": "text", "text": "Resets in 1h 56m", "x": 18, "y": 90, "width": 180, "size": 1, "color": "#e8dcc8" }
   ]
 }
 ```
@@ -515,12 +512,11 @@ Copy-paste ready payloads for quick testing.
 {
   "play_sound": 20,
   "items": [
-    { "type": "rect", "x": 6, "y": 0, "width": 208, "height": 82, "radius": 10, "color": "#1e2a22" },
-    { "type": "text", "text": "48%", "x": 18, "y": 6, "width": 100, "size": 4, "color": "#e8dcc8" },
-    { "type": "text", "text": "Weekly", "x": 100, "y": 14, "width": 105, "align": "right", "size": 1, "color": "#a09888" },
-    { "type": "progress", "x": 18, "y": 42, "width": 184, "height": 12, "radius": 6, "value": 48, "color": "#6b8f4e", "bg_color": "#3a3a3a" },
-    { "type": "text", "text": "Resets in 1d 11h", "x": 18, "y": 62, "width": 180, "size": 1, "color": "#9a9488" },
-    { "type": "text", "text": "* Baking...", "x": 0, "y": 92, "width": 220, "align": "center", "size": 2, "color": "#d4845a" }
+    { "type": "text", "text": "48%", "x": 18, "y": 10, "width": 100, "size": 4, "color": "#e8dcc8" },
+    { "type": "text", "text": "Weekly", "x": 100, "y": 18, "width": 105, "align": "right", "size": 1, "color": "#a09888" },
+    { "type": "progress", "x": 18, "y": 45, "width": 184, "height": 12, "radius": 6, "value": 48, "color": "#6b8f4e", "bg_color": "#3a3a3a" },
+    { "type": "text", "text": "Resets in 1d 11h", "x": 18, "y": 63, "width": 180, "size": 1, "color": "#9a9488" },
+    { "type": "text", "text": "* Baking...", "x": 0, "y": 87, "width": 220, "align": "center", "size": 2, "color": "#d4845a" }
   ]
 }
 ```

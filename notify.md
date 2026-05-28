@@ -4,7 +4,7 @@ allowed-tools: Bash(*)
 ---
 
 Send a notification to the paired LCD device.
-Follow SKILL.md section 5 (Notify) to build and send the payload.
+Follow SKILL.md section 4 (Notify) to build and send the payload.
 
 If the user provided a message, use it as the notification text (legacy text mode).
 If no message, ask what to send.

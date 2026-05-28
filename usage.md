@@ -4,7 +4,7 @@ allowed-tools: Bash(*)
 ---
 
 Fetch real-time Claude Code usage and send both sections to the LCD.
-Follow SKILL.md section 6 (Usage Monitor) to:
+Follow SKILL.md section 5 (Usage Monitor) to:
 
 1. Get OAuth token from Keychain / credentials file
 2. Fetch usage from the API
