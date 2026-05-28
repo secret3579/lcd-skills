@@ -1,20 +1,20 @@
 ---
-name: lcd
+name: vibe-desk-display
 description: >
-  Interact with the user's LCD notification device (ST7789, ESP32) over LAN.
+  Interact with the user's desk display device (ST7789, ESP32) over LAN.
   Supports pairing, sending notifications with plain text,
   rich layout (positioned text, shapes, progress bars), and buzzer sounds.
-  Usage auto-updates on LCD via hook every time Claude responds.
-  Triggers: "pair my LCD", "show on my screen", "notify my LCD",
+  Usage auto-updates on display via hook every time Claude responds.
+  Triggers: "pair my display", "show on my screen", "notify my display",
   "ping my display when done", "send to my screen",
-  "show my usage on LCD", "unpair my LCD".
+  "show my usage on display", "unpair my display".
 allowed-tools: Bash(*)
 ---
 
-# LCD Skill
+# Vibe Desk Display Skill
 
-Discover, pair, and send notifications to an ST7789 LCD device on the local network.
-After pairing, usage auto-updates on LCD via Stop hook every time Claude responds.
+Discover, pair, and send notifications to an ST7789 desk display on the local network.
+After pairing, usage auto-updates on display via Stop hook every time Claude responds.
 
 ## Config
 
@@ -25,7 +25,7 @@ Path: `~/.config/autonomous-lcd.json`
   "devices": [
     {
       "device_id": "lcd-bd4a14",
-      "label": "My LCD",
+      "label": "My Display",
       "last_known_ip": "192.168.1.42",
       "last_seen_at": "2026-05-18T10:30:00Z"
     }
@@ -68,16 +68,16 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/discover.py
 
 One-time setup to register a new device. Uses OTP code displayed on the device screen — no need to read device ID stickers.
 
-**When to use:** "pair my LCD", "add a screen", "set up device".
+**When to use:** "pair my display", "add a screen", "set up device".
 
 ### User-facing messages
 
 Only show simple, non-technical messages to the user during pairing:
 
 1. "Scanning your network..." (while discovery runs)
-2. "Found N device(s). Check your LCD screen for a pairing code." (after discovery)
+2. "Found N device(s). Check your display for a pairing code." (after discovery)
 3. "What code do you see on your device?" (ask user)
-4. "Paired successfully! Your LCD should now show a confirmation." (after done)
+4. "Paired successfully! Your display should now show a confirmation." (after done)
 
 **Do NOT show** to user: device IDs, IP addresses, config paths, HTTP status codes, raw JSON, error tracebacks, or internal debug info. These are implementation details.
 
@@ -87,8 +87,8 @@ Only show simple, non-technical messages to the user during pairing:
 
 1. Tell user: **"Scanning your network..."**
 2. Run discovery (section 1) to find **all** devices on the network.
-3. If no devices found → tell user: "No devices found. Make sure your LCD is powered on and connected to the same WiFi."
-4. Tell user: **"Found N device(s). Check your LCD screen for a pairing code."**
+3. If no devices found → tell user: "No devices found. Make sure your display is powered on and connected to the same WiFi."
+4. Tell user: **"Found N device(s). Check your display for a pairing code."**
 5. For each discovered device, generate a random **4-digit code** (1000–9999, unique per device).
 6. Send each device its code as a notification (silently, don't show HTTP results to user):
    ```json
@@ -103,14 +103,14 @@ Only show simple, non-technical messages to the user during pairing:
    ```
    Skip devices that fail to respond — don't mention them to the user.
 7. Ask user: **"What code do you see on your device?"** — match input to a device.
-8. Label defaults to **"My LCD"** (skip asking).
+8. Label defaults to **"My Display"** (skip asking).
 9. Write to `~/.config/autonomous-lcd.json`:
    - New device → append to `devices[]`
    - Existing device ID → update entry
    - First device → set as `default_device_id`
    - Set file permission `0600`
 10. Send confirmation notification: `{"text": "Paired with Claude", "color": "green", "play_sound": 20}`
-11. Tell user: **"Paired successfully! Your LCD should now show a confirmation."**
+11. Tell user: **"Paired successfully! Your display should now show a confirmation."**
 
 Re-pairing same device ID is an update, not an error.
 
@@ -120,7 +120,7 @@ Re-pairing same device ID is an update, not an error.
 
 Remove a device.
 
-**When to use:** "unpair my LCD", "remove my LCD", "stop LCD updates".
+**When to use:** "unpair my display", "remove my display", "stop display updates".
 
 ### Procedure
 
@@ -135,7 +135,7 @@ Remove a device.
 
 Send a notification to a paired device. This is the most frequently used operation.
 
-**When to use:** "show on my screen", "notify my LCD", "ping my display when done". Also use proactively at end of long tasks (build, test, deploy).
+**When to use:** "show on my screen", "notify my display", "ping my display when done". Also use proactively at end of long tasks (build, test, deploy).
 
 ### 4.1 Pick device
 
@@ -224,9 +224,9 @@ If user asks for dry run, show the payload and target URL without sending.
 
 ## 5. Usage Monitor (One-Shot)
 
-Fetch real usage data from the Claude Code API and display on LCD immediately. Used by the `/lcd:usage` slash command.
+Fetch real usage data from the Claude Code API and display immediately. Used by the `/vibe-desk-display:usage` slash command.
 
-**When to use:** "show my usage on LCD", "update usage now", "refresh LCD".
+**When to use:** "show my usage on display", "update usage now", "refresh display".
 
 ### 5.1 Get OAuth token
 

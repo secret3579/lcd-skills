@@ -1,12 +1,12 @@
-# LCD Plugin — Setup Guide
+# Vibe Desk Display — Setup Guide
 
-Turn your ESP32 LCD into a live Claude Code usage monitor.
+Turn your ESP32 desk display into a live Claude Code usage monitor.
 
 ---
 
 ## What you need
 
-- An ESP32 ST7789 LCD device
+- An ESP32 ST7789 desk display
 - Your computer and the device on the same WiFi network
 - Claude Code (with OAuth login, not API key)
 
@@ -17,11 +17,11 @@ Turn your ESP32 LCD into a live Claude Code usage monitor.
 Open your terminal and run:
 
 ```bash
-claude plugins marketplace add https://github.com/secret3579/lcd-skills
+claude plugins marketplace add https://github.com/autonomous-ai/vibe-desk-display
 ```
 
 ```bash
-claude plugins install lcd
+claude plugins install vibe-desk-display
 ```
 
 Then **restart Claude Code** (exit and reopen).
@@ -30,15 +30,15 @@ Then **restart Claude Code** (exit and reopen).
 
 ## Pair your device
 
-1. Power on your LCD device
+1. Power on your display
 2. Open Claude Code and type:
 
 ```
-pair my LCD
+pair my display
 ```
 
 3. Claude will scan your network and find the device
-4. A **4-digit code** will appear on the LCD screen
+4. A **4-digit code** will appear on the display screen
 5. Type that code into Claude Code
 
 That's it — your device is paired.
@@ -47,20 +47,20 @@ That's it — your device is paired.
 
 ## What happens next
 
-Once paired, the LCD automatically shows your Claude Code usage every time Claude responds. No action needed.
+Once paired, the display automatically shows your Claude Code usage every time Claude responds. No action needed.
 
 You can also:
 
-- Say `notify my LCD` to send a custom message to the screen
-- Type `/lcd:usage` to refresh the usage display immediately
-- Say `unpair my LCD` to disconnect the device
+- Say `notify my display` to send a custom message to the screen
+- Type `/vibe-desk-display:usage` to refresh the usage display immediately
+- Say `unpair my display` to disconnect the device
 
 ---
 
 ## Update the plugin
 
 ```bash
-claude plugins update lcd
+claude plugins update vibe-desk-display
 ```
 
 Restart Claude Code after updating.
@@ -70,5 +70,5 @@ Restart Claude Code after updating.
 ## Uninstall
 
 ```bash
-claude plugins uninstall lcd
+claude plugins uninstall vibe-desk-display
 ```

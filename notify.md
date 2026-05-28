@@ -1,9 +1,9 @@
 ---
-description: Send a notification to your paired LCD device
+description: Send a notification to your paired desk display
 allowed-tools: Bash(*)
 ---
 
-Send a notification to the paired LCD device.
+Send a notification to the paired desk display.
 Follow SKILL.md section 4 (Notify) to build and send the payload.
 
 If the user provided a message, use it as the notification text (legacy text mode).

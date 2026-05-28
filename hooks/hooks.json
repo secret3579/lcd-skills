@@ -1,5 +1,5 @@
 {
-  "description": "Send usage data to LCD when Claude finishes a response",
+  "description": "Send usage data to desk display when Claude finishes a response",
   "hooks": {
     "Stop": [
       {

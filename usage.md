@@ -1,9 +1,9 @@
 ---
-description: Fetch and display Claude Code usage on your LCD right now
+description: Fetch and display Claude Code usage on your desk display right now
 allowed-tools: Bash(*)
 ---
 
-Fetch real-time Claude Code usage and send both sections to the LCD.
+Fetch real-time Claude Code usage and send both sections to the display.
 Follow SKILL.md section 5 (Usage Monitor) to:
 
 1. Get OAuth token from Keychain / credentials file

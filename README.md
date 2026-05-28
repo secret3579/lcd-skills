@@ -1,22 +1,22 @@
-# LCD Plugin for Claude Code
+# Vibe Desk Display for Claude Code
 
-Turn your ESP32 LCD into a live Claude Code usage monitor. Usage auto-updates every time Claude responds — no dashboard, no browser, just a glance at your desk.
+Turn your ESP32 desk display into a live Claude Code usage monitor. Usage auto-updates every time Claude responds — no dashboard, no browser, just a glance at your desk.
 
 ## Quick Start
 
 ```bash
-claude plugins marketplace add https://github.com/secret3579/lcd-skills
-claude plugins install lcd
+claude plugins marketplace add https://github.com/autonomous-ai/vibe-desk-display
+claude plugins install vibe-desk-display
 ```
 
-Restart Claude Code, then type `pair my LCD` and follow the on-screen instructions.
+Restart Claude Code, then type `pair my display` and follow the on-screen instructions.
 
 See the full [Setup Guide](GUIDE.md) for details.
 
 ## Features
 
-- **Live usage display** — 5-hour and 7-day usage auto-updates on LCD after every Claude response
-- **Notifications** — send custom messages to the screen ("notify my LCD when done")
+- **Live usage display** — 5-hour and 7-day usage auto-updates on display after every Claude response
+- **Notifications** — send custom messages to the screen ("notify my display when done")
 - **OTP pairing** — no sticker reading, just enter the code shown on screen
 - **Zero dependencies** — Python 3 stdlib only, no pip install needed
 
@@ -24,21 +24,21 @@ See the full [Setup Guide](GUIDE.md) for details.
 
 | Command | Description |
 |---------|-------------|
-| `/lcd:usage` | Refresh usage display now |
-| `/lcd:notify` | Send a notification |
+| `/vibe-desk-display:usage` | Refresh usage display now |
+| `/vibe-desk-display:notify` | Send a notification |
 
-Or use natural language: "show my usage on LCD", "notify my LCD", "unpair my LCD"
+Or use natural language: "show my usage on display", "notify my display", "unpair my display"
 
 ## Requirements
 
 - macOS
 - Python 3
-- ESP32 ST7789 LCD device on the same WiFi
+- ESP32 ST7789 desk display on the same WiFi
 - Claude Code with OAuth login
 
 ## Update / Uninstall
 
 ```bash
-claude plugins update lcd      # pull latest
-claude plugins uninstall lcd   # remove plugin
+claude plugins update vibe-desk-display      # pull latest
+claude plugins uninstall vibe-desk-display   # remove plugin
 ```

@@ -1,17 +1,17 @@
 {
-  "name": "lcd-skills",
-  "description": "LCD notification device plugins for Claude Code",
+  "name": "vibe-desk-display",
+  "description": "Desk display plugin for Claude Code",
   "owner": {
     "name": "0x0409",
     "email": ""
   },
   "plugins": [
     {
-      "name": "lcd",
-      "description": "Display Claude Code usage and notifications on your ESP32 ST7789 LCD device",
+      "name": "vibe-desk-display",
+      "description": "Turn your ESP32 desk display into a live Claude Code usage monitor",
       "source": {
         "source": "url",
-        "url": "https://github.com/secret3579/lcd-skills.git"
+        "url": "https://github.com/autonomous-ai/vibe-desk-display.git"
       }
     }
   ]
